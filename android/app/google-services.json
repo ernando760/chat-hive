@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "643361606532",
+    "project_id": "chat-hive-backend",
+    "storage_bucket": "chat-hive-backend.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:643361606532:android:4d4f6416a68979d0c4abd1",
+        "android_client_info": {
+          "package_name": "com.ernando.chat_hive"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsC32oBWgeHAm9F1XY_6p8HIbD-Rqd92Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
