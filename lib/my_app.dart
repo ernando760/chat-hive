@@ -6,6 +6,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Modular.setInitialRoute("/auth/welcome");
     return MaterialApp.router(
       title: "Chat hive",
       routerConfig: Modular.routerConfig,

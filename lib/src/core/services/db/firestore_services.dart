@@ -10,7 +10,7 @@ class FirestoreServices extends DbServices {
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
   @override
-  Future<Result<Unit, String>> createUser({required UserModel user}) async {
+  AsyncResult<Unit, String> createUser({required UserModel user}) async {
     if (user.uuid != null) {
       final col = _firebaseFirestore.collection("/users");
 
@@ -21,7 +21,7 @@ class FirestoreServices extends DbServices {
   }
 
   @override
-  Future<Result<Unit, String>> deleteUser({required String uuid}) async {
+  AsyncResult<Unit, String> deleteUser({required String uuid}) async {
     if (uuid.isNotEmpty) {
       final col = _firebaseFirestore.collection("/users");
       await col.doc(uuid).delete();
@@ -31,7 +31,7 @@ class FirestoreServices extends DbServices {
   }
 
   @override
-  Future<Result<UserModel, String>> getUser({required String uuid}) async {
+  AsyncResult<UserModel, String> getUser({required String uuid}) async {
     if (uuid.isNotEmpty) {
       final col = _firebaseFirestore.collection("/users");
       final doc = await col.doc(uuid).get();
@@ -46,7 +46,7 @@ class FirestoreServices extends DbServices {
   }
 
   @override
-  Future<Result<List<UserModel>, String>> getAllUsers() async {
+  AsyncResult<List<UserModel>, String> getAllUsers() async {
     try {
       final query = await _firebaseFirestore.collection("/users").get();
       final users =
@@ -59,7 +59,7 @@ class FirestoreServices extends DbServices {
   }
 
   @override
-  Future<Result<UserModel, String>> updateUser(
+  AsyncResult<UserModel, String> updateUser(
       {required String uuid, required UserModel user}) async {
     try {
       if (uuid.isNotEmpty) {
@@ -96,7 +96,7 @@ class FirestoreServices extends DbServices {
   }
 
   @override
-  Future<Result<Chat, String>> createChat(
+  AsyncResult<Chat, String> createChat(
       {required UserModel userCurrent,
       required UserModel userTarget,
       String? message}) async {
@@ -122,7 +122,7 @@ class FirestoreServices extends DbServices {
   }
 
   @override
-  Future<Result<Unit, String>> sendMessage(Chat chat, String message) async {
+  AsyncResult<Unit, String> sendMessage(Chat chat, String message) async {
     try {
       final doc = _firebaseFirestore.collection("/chats").doc(chat.uuidChat);
       if (message.isNotEmpty) {

@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+import 'package:chat_hive/src/core/models/user_model.dart';
 import 'package:chat_hive/src/core/services/auth/auth_services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -17,10 +18,6 @@ void main() {
     final uuidUser = await mockFirebaseAuthServices.signIn(
         email: "teste.testando@teste.com", password: "teste123");
 
-    final res = uuidUser.fold((success) => success, (failure) => failure);
-
-    print(res);
-
     expect(uuidUser, equals(const Success("id")));
 
     verify(
@@ -37,10 +34,6 @@ void main() {
     final uuidUser =
         await mockFirebaseAuthServices.signIn(email: "", password: "teste123");
 
-    final res = uuidUser.fold((success) => success, (failure) => failure);
-
-    print(res);
-
     expect(uuidUser, equals(const Failure("error ao fazer o login")));
 
     verify(
@@ -55,7 +48,12 @@ void main() {
             lastname: "testando",
             email: "teste.testando@teste.com",
             password: "teste123"))
-        .thenAnswer((_) async => const Failure("error ao fazer o login"));
+        .thenAnswer((_) async => const Success(UserModel(
+            uuid: "uuid",
+            name: "teste",
+            lastname: "testando",
+            email: "teste.testando@teste.com",
+            password: "teste123")));
 
     final uuidUser = await mockFirebaseAuthServices.signUp(
         name: "teste",
@@ -63,11 +61,14 @@ void main() {
         email: "teste.testando@teste.com",
         password: "teste123");
 
-    final res = uuidUser.fold((success) => success, (failure) => failure);
-
-    print(res);
-
-    expect(uuidUser, equals(const Failure("error ao fazer o login")));
+    expect(
+        uuidUser,
+        equals(const Success<UserModel, String>(UserModel(
+            uuid: "uuid",
+            name: "teste",
+            lastname: "testando",
+            email: "teste.testando@teste.com",
+            password: "teste123"))));
 
     verify(
       () => mockFirebaseAuthServices.signUp(
@@ -88,10 +89,6 @@ void main() {
 
     final uuidUser = await mockFirebaseAuthServices.signUp(
         name: "teste", lastname: "testando", email: "", password: "teste123");
-
-    final res = uuidUser.fold((success) => success, (failure) => failure);
-
-    print(res);
 
     expect(uuidUser, equals(const Failure("error ao fazer o cadastro")));
 

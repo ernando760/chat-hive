@@ -120,11 +120,12 @@ void main() {
           mockFirestoreServices.createChat(
               userCurrent: any(named: "userCurrent"),
               userTarget: any(named: "userTarget"))).thenAnswer((_) async =>
-          Success(Chat(
-              uuidChat: "uuidChat",
-              senderUuid: "senderUuid",
-              receiverUuid: "receiverUuid",
-              messages: [
+          const Success(
+              Chat(
+                  uuidChat: "uuidChat",
+                  senderUuid: "senderUuid",
+                  receiverUuid: "receiverUuid",
+                  messages: [
                 Message(uuid: "uuid", senderUuid: "senderUuid", message: "oi")
               ])));
 
@@ -144,7 +145,7 @@ void main() {
 
       expect(
           res,
-          equals(Success<Chat, String>(Chat(
+          equals(const Success<Chat, String>(Chat(
               uuidChat: "uuidChat",
               senderUuid: "senderUuid",
               receiverUuid: "receiverUuid",
@@ -160,7 +161,7 @@ void main() {
     });
     test("should be return Messages when get all messages", () async {
       when(() => mockFirestoreServices.getAllMessages("uuidChat"))
-          .thenAnswer((_) => Success(Stream.value([
+          .thenAnswer((_) => Success(Stream.value(const [
                 Message(uuid: "1", senderUuid: "senderUuid", message: "oi"),
                 Message(
                     uuid: "2", senderUuid: "senderUuid", message: "tudo bem")
@@ -173,7 +174,7 @@ void main() {
 
       expect(
           stream,
-          emits([
+          emits(const [
             Message(uuid: "1", senderUuid: "senderUuid", message: "oi"),
             Message(uuid: "2", senderUuid: "senderUuid", message: "tudo bem"),
           ]));
@@ -187,7 +188,7 @@ void main() {
           .thenAnswer((_) async => Success.unit());
 
       final res = await mockFirestoreServices.sendMessage(
-          Chat(
+          const Chat(
               uuidChat: "uuidChat",
               senderUuid: "senderUuid",
               receiverUuid: "receiverUuid",
@@ -316,7 +317,7 @@ void main() {
           (_) async => const Failure("Error ao enviar as mensagens"));
 
       final res = await mockFirestoreServices.sendMessage(
-          Chat(
+          const Chat(
               uuidChat: "uuidChat",
               senderUuid: "senderUuid",
               receiverUuid: "receiverUuid",

@@ -7,7 +7,7 @@ class Message extends Equatable {
   final String? uuid;
   final String? senderUuid;
   final String message;
-  Message({
+  const Message({
     this.uuid,
     this.senderUuid,
     required this.message,
