@@ -1,4 +1,4 @@
-import 'package:chat_hive/src/extensions/form_validator_extension.dart';
+import 'package:chat_hive/src/shared/extensions/form_validator_extension.dart';
 
 class FormValidator {
   static String? validateName(String? name) {

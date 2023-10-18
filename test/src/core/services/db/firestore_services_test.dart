@@ -1,9 +1,9 @@
 // ignore_for_file: avoid_print
 
-import 'package:chat_hive/src/core/models/chat.dart';
 import 'package:chat_hive/src/core/models/message.dart';
 import 'package:chat_hive/src/core/models/user_model.dart';
 import 'package:chat_hive/src/core/services/db/db_services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:result_dart/result_dart.dart';
@@ -12,15 +12,12 @@ class MockFirestoreServices extends Mock implements DbServices {}
 
 class FakeUserModel extends Fake implements UserModel {}
 
-class FakeChat extends Fake implements Chat {}
-
 void main() {
   late final MockFirestoreServices mockFirestoreServices;
-
+  final Timestamp timestamp = Timestamp.now();
   setUpAll(() {
     mockFirestoreServices = MockFirestoreServices();
     registerFallbackValue(FakeUserModel());
-    registerFallbackValue(FakeChat());
   });
 
   group("Success tests", () {
@@ -83,7 +80,11 @@ void main() {
 
     test("should be return UserModel when update user", () async {
       when(() => mockFirestoreServices.updateUser(
-              uuid: "uuid", user: any(named: "user")))
+              uuid: "uuid",
+              name: "teste2",
+              lastname: "testando2",
+              email: "teste.testando@testando",
+              password: "teste123"))
           .thenAnswer((_) async => const Success(UserModel(
               uuid: "uuid",
               name: "teste2",
@@ -93,12 +94,10 @@ void main() {
 
       final res = await mockFirestoreServices.updateUser(
           uuid: "uuid",
-          user: const UserModel(
-              uuid: "uuid",
-              name: "teste2",
-              lastname: "testando2",
-              email: "teste.testando@testando",
-              password: "teste123"));
+          name: "teste2",
+          lastname: "testando2",
+          email: "teste.testando@testando",
+          password: "teste123");
 
       expect(
           res,
@@ -111,96 +110,74 @@ void main() {
 
       verify(
         () => mockFirestoreServices.updateUser(
-            uuid: "uuid", user: any(named: "user")),
+            uuid: "uuid",
+            name: "teste2",
+            lastname: "testando2",
+            email: "teste.testando@testando",
+            password: "teste123"),
       ).called(1);
     });
 
-    test("should be return Chat when create chat", () async {
-      when(() =>
-          mockFirestoreServices.createChat(
-              userCurrent: any(named: "userCurrent"),
-              userTarget: any(named: "userTarget"))).thenAnswer((_) async =>
-          const Success(
-              Chat(
-                  uuidChat: "uuidChat",
-                  senderUuid: "senderUuid",
-                  receiverUuid: "receiverUuid",
-                  messages: [
-                Message(uuid: "uuid", senderUuid: "senderUuid", message: "oi")
-              ])));
-
-      final res = await mockFirestoreServices.createChat(
-          userCurrent: const UserModel(
-              uuid: "uuid",
-              name: "teste",
-              lastname: "testando",
-              email: "teste.testando@testando",
-              password: "teste123"),
-          userTarget: const UserModel(
-              uuid: "uuid",
-              name: "teste2",
-              lastname: "testando2",
-              email: "teste.testando2@testando",
-              password: "teste123"));
-
-      expect(
-          res,
-          equals(const Success<Chat, String>(Chat(
-              uuidChat: "uuidChat",
-              senderUuid: "senderUuid",
-              receiverUuid: "receiverUuid",
-              messages: [
-                Message(uuid: "uuid", senderUuid: "senderUuid", message: "oi")
-              ]))));
-
-      verify(
-        () => mockFirestoreServices.createChat(
-            userCurrent: any(named: "userCurrent"),
-            userTarget: any(named: "userTarget")),
-      ).called(1);
-    });
     test("should be return Messages when get all messages", () async {
-      when(() => mockFirestoreServices.getAllMessages("uuidChat"))
-          .thenAnswer((_) => Success(Stream.value(const [
-                Message(uuid: "1", senderUuid: "senderUuid", message: "oi"),
+      when(() => mockFirestoreServices.getAllMessages(
+              senderUuid: "senderUuid", receiverUuid: "receiverUuid"))
+          .thenAnswer((_) => Success(Stream.value([
                 Message(
-                    uuid: "2", senderUuid: "senderUuid", message: "tudo bem")
+                    uuid: "1",
+                    senderUuid: "senderUuid",
+                    message: "oi",
+                    timestamp: timestamp),
+                Message(
+                    uuid: "2",
+                    senderUuid: "senderUuid",
+                    message: "tudo bem",
+                    timestamp: timestamp)
               ]).asBroadcastStream()));
 
-      final res = mockFirestoreServices.getAllMessages("uuidChat");
+      final res = mockFirestoreServices.getAllMessages(
+          senderUuid: "senderUuid", receiverUuid: "receiverUuid");
 
       final stream = res.fold<Stream<List<Message>>?>(
           (success) => success, (failure) => null);
 
       expect(
           stream,
-          emits(const [
-            Message(uuid: "1", senderUuid: "senderUuid", message: "oi"),
-            Message(uuid: "2", senderUuid: "senderUuid", message: "tudo bem"),
+          emits([
+            Message(
+                uuid: "1",
+                senderUuid: "senderUuid",
+                message: "oi",
+                timestamp: timestamp),
+            Message(
+                uuid: "2",
+                senderUuid: "senderUuid",
+                message: "tudo bem",
+                timestamp: timestamp),
           ]));
 
       verify(
-        () => mockFirestoreServices.getAllMessages("uuidChat"),
+        () => mockFirestoreServices.getAllMessages(
+            senderUuid: "senderUuid", receiverUuid: "receiverUuid"),
       ).called(1);
     });
     test("should be return Unit when send message", () async {
-      when(() => mockFirestoreServices.sendMessage(any(), "tudo bem"))
-          .thenAnswer((_) async => Success.unit());
+      when(() => mockFirestoreServices.sendMessage(
+          receiverUuid: "receiverUuid",
+          senderUuid: "senderUuid",
+          message: "tudo bem")).thenAnswer((_) async => Success.unit());
 
       final res = await mockFirestoreServices.sendMessage(
-          const Chat(
-              uuidChat: "uuidChat",
-              senderUuid: "senderUuid",
-              receiverUuid: "receiverUuid",
-              messages: [
-                Message(uuid: "uuid", senderUuid: "senderUuid", message: "oi")
-              ]),
-          "tudo bem");
+          receiverUuid: "receiverUuid",
+          senderUuid: "senderUuid",
+          message: "tudo bem");
 
       expect(res, equals(Success.unit<String>()));
 
       verify(
-        () => mockFirestoreServices.sendMessage(any(), "tudo bem"),
+        () => mockFirestoreServices.sendMessage(
+            receiverUuid: "receiverUuid",
+            senderUuid: "senderUuid",
+            message: "tudo bem"),
       ).called(1);
     });
   });
@@ -252,84 +229,62 @@ void main() {
 
     test("should be return message error when update user", () async {
       when(() => mockFirestoreServices.updateUser(
-              uuid: "", user: any(named: "user")))
+              uuid: "",
+              name: "teste2",
+              lastname: "testando2",
+              email: "teste.testando@testando",
+              password: "teste123"))
           .thenAnswer(
               (_) async => const Failure("Error ao atualizar o usuario"));
 
       final res = await mockFirestoreServices.updateUser(
           uuid: "",
-          user: const UserModel(
-              name: "teste2",
-              lastname: "testando2",
-              email: "teste.testando@testando",
-              password: "teste123"));
+          name: "teste2",
+          lastname: "testando2",
+          email: "teste.testando@testando",
+          password: "teste123");
 
       expect(res, equals(const Failure("Error ao atualizar o usuario")));
 
       verify(
         () => mockFirestoreServices.updateUser(
-            uuid: "", user: any(named: "user")),
-      ).called(1);
-    });
-
-    test("should be return message error when create chat", () async {
-      when(() => mockFirestoreServices.createChat(
-              userCurrent: any(named: "userCurrent"),
-              userTarget: any(named: "userTarget")))
-          .thenAnswer((_) async => const Failure("Error ao criar o bate papo"));
-
-      final res = await mockFirestoreServices.createChat(
-          userCurrent: const UserModel(
-              name: "teste",
-              lastname: "testando",
-              email: "teste.testando@testando",
-              password: "teste123"),
-          userTarget: const UserModel(
-              uuid: "uuid",
-              name: "teste2",
-              lastname: "testando2",
-              email: "teste.testando2@testando",
-              password: "teste123"));
-
-      expect(res, equals(const Failure("Error ao criar o bate papo")));
-
-      verify(
-        () => mockFirestoreServices.createChat(
-            userCurrent: any(named: "userCurrent"),
-            userTarget: any(named: "userTarget")),
+            uuid: "",
+            name: "teste2",
+            lastname: "testando2",
+            email: "teste.testando@testando",
+            password: "teste123"),
       ).called(1);
     });
 
     test("should be return message error when get all messages", () async {
-      when(() => mockFirestoreServices.getAllMessages(""))
+      when(() => mockFirestoreServices.getAllMessages(
+              senderUuid: "senderUuid", receiverUuid: ""))
           .thenAnswer((_) => const Failure("Error ao obter as menssagens"));
 
-      final res = mockFirestoreServices.getAllMessages("");
+      final res = mockFirestoreServices.getAllMessages(
+          senderUuid: "senderUuid", receiverUuid: "");
 
       expect(res, equals(const Failure("Error ao obter as menssagens")));
 
       verify(
-        () => mockFirestoreServices.getAllMessages(""),
+        () => mockFirestoreServices.getAllMessages(
+            senderUuid: "senderUuid", receiverUuid: ""),
       ).called(1);
     });
     test("should be return message error when send message", () async {
-      when(() => mockFirestoreServices.sendMessage(any(), "")).thenAnswer(
-          (_) async => const Failure("Error ao enviar as mensagens"));
+      when(() => mockFirestoreServices.sendMessage(
+              receiverUuid: "", senderUuid: "senderUuid", message: ""))
+          .thenAnswer(
+              (_) async => const Failure("Error ao enviar as mensagens"));
 
       final res = await mockFirestoreServices.sendMessage(
-          const Chat(
-              uuidChat: "uuidChat",
-              senderUuid: "senderUuid",
-              receiverUuid: "receiverUuid",
-              messages: [
-                Message(uuid: "uuid", senderUuid: "senderUuid", message: "oi")
-              ]),
-          "");
+          receiverUuid: "", senderUuid: "senderUuid", message: "");
 
       expect(res, equals(const Failure("Error ao enviar as mensagens")));
 
       verify(
-        () => mockFirestoreServices.sendMessage(any(), ""),
+        () => mockFirestoreServices.sendMessage(
+            receiverUuid: "", senderUuid: "senderUuid", message: ""),
       ).called(1);
     });
   });

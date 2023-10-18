@@ -7,12 +7,14 @@ class UserModel extends Equatable {
   final String? uuid;
   final String name;
   final String lastname;
+  final String? photoUrl;
   final String email;
   final String password;
   const UserModel({
     this.uuid,
     required this.name,
     required this.lastname,
+    this.photoUrl,
     required this.email,
     required this.password,
   });
@@ -23,6 +25,7 @@ class UserModel extends Equatable {
       uuid,
       name,
       lastname,
+      photoUrl,
       email,
       password,
     ];
@@ -32,6 +35,7 @@ class UserModel extends Equatable {
     String? uuid,
     String? name,
     String? lastname,
+    String? photoUrl,
     String? email,
     String? password,
   }) {
@@ -39,6 +43,7 @@ class UserModel extends Equatable {
       uuid: uuid ?? this.uuid,
       name: name ?? this.name,
       lastname: lastname ?? this.lastname,
+      photoUrl: photoUrl ?? this.photoUrl,
       email: email ?? this.email,
       password: password ?? this.password,
     );
@@ -49,6 +54,7 @@ class UserModel extends Equatable {
       'uuid': uuid,
       'name': name,
       'lastname': lastname,
+      'photoUrl': photoUrl,
       'email': email,
       'password': password,
     };
@@ -59,10 +65,13 @@ class UserModel extends Equatable {
       uuid: map['uuid'] != null ? map['uuid'] as String : null,
       name: map['name'] as String,
       lastname: map['lastname'] as String,
+      photoUrl: map['photoUrl'] != null ? map['photoUrl'] as String : null,
       email: map['email'] as String,
       password: map['password'] as String,
     );
   }
+
+  String get fullName => "$name $lastname";
 
   String toJson() => json.encode(toMap());
 

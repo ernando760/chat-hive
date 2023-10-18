@@ -1,6 +1,7 @@
 import 'dart:async';
+import 'dart:developer';
 
-import 'package:chat_hive/src/screens/auth/store/cubit/auth_cubit.dart';
+import 'package:chat_hive/src/screens/auth/store/bloc/auth_bloc.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 
 class AuthGuard extends RouteGuard {
@@ -8,7 +9,8 @@ class AuthGuard extends RouteGuard {
 
   @override
   FutureOr<bool> canActivate(String path, ParallelRoute route) {
-    print("Path: $path");
-    return Modular.get<AuthCubit>().isLogged;
+    log(path, name: "Path");
+    log("${Modular.get<AuthBloc>().isLogged}", name: "isLogged");
+    return Modular.get<AuthBloc>().isLogged;
   }
 }

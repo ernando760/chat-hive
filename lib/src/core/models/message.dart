@@ -1,27 +1,32 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
 class Message extends Equatable {
   final String? uuid;
   final String? senderUuid;
   final String message;
+  final Timestamp timestamp;
   const Message({
     this.uuid,
     this.senderUuid,
     required this.message,
+    required this.timestamp,
   });
 
   Message copyWith({
     String? uuid,
     String? senderUuid,
     String? message,
+    Timestamp? timestamp,
   }) {
     return Message(
       uuid: uuid ?? this.uuid,
       senderUuid: senderUuid ?? this.senderUuid,
       message: message ?? this.message,
+      timestamp: timestamp ?? this.timestamp,
     );
   }
 
@@ -30,6 +35,7 @@ class Message extends Equatable {
       'uuid': uuid,
       'senderUuid': senderUuid,
       'message': message,
+      'timestamp': timestamp,
     };
   }
 
@@ -39,6 +45,7 @@ class Message extends Equatable {
       senderUuid:
           map['senderUuid'] != null ? map['senderUuid'] as String : null,
       message: map['message'] as String,
+      timestamp: map['timestamp'] as Timestamp,
     );
   }
 
@@ -64,5 +71,5 @@ class Message extends Equatable {
   bool get stringify => true;
 
   @override
-  List<Object?> get props => [uuid, senderUuid, message];
+  List<Object?> get props => [uuid, senderUuid, message, timestamp];
 }

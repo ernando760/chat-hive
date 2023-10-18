@@ -1,14 +1,14 @@
-import 'package:chat_hive/src/core/models/user_model.dart';
+import 'package:chat_hive/src/core/services/errors/auth_error.dart';
 import 'package:result_dart/result_dart.dart';
 
 abstract class AuthServices {
-  AsyncResult<String, String> signIn(
+  bool get isLogged => false;
+  String? get userCurrentUuid => null;
+  AsyncResult<String, SignInError> signIn(
       {required String email, required String password});
-  AsyncResult<UserModel, String> signUp(
-      {required String name,
-      required String lastname,
-      required String email,
-      required String password});
-  Stream<String?> authStateChanges();
+  AsyncResult<String, SignUpError> signUp(
+      {required String email, required String password});
+  AsyncResult<Unit, SignUpError> updateEmail({required String email});
+  AsyncResult<Unit, SignUpError> updatePassword({required String password});
   Future<void> signOut();
 }

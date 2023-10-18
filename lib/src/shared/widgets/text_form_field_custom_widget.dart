@@ -7,12 +7,15 @@ class TextFormFieldCustomWidget extends StatelessWidget {
       required this.controller,
       this.keyboardType,
       this.validator,
+      this.isObscure,
+      this.showPassword,
       this.padding});
   final String label;
   final TextEditingController controller;
   final TextInputType? keyboardType;
-  final bool isObscure = false;
+  final bool? isObscure;
   final String? Function(String?)? validator;
+  final void Function()? showPassword;
   final EdgeInsetsGeometry? padding;
   @override
   Widget build(BuildContext context) {
@@ -20,10 +23,20 @@ class TextFormFieldCustomWidget extends StatelessWidget {
       padding: padding ?? const EdgeInsets.only(bottom: 20),
       child: TextFormField(
         controller: controller,
+        onTapOutside: (event) => FocusScope.of(context).unfocus(),
         decoration: InputDecoration(
-            label: Text(label), border: const OutlineInputBorder()),
+            label: Text(label),
+            prefixIcon: isObscure != null
+                ? isObscure!
+                    ? IconButton(
+                        onPressed: showPassword,
+                        icon: const Icon(Icons.remove_red_eye_rounded))
+                    : IconButton(
+                        onPressed: showPassword,
+                        icon: const Icon(Icons.visibility_off_outlined))
+                : null),
         keyboardType: keyboardType,
-        obscureText: isObscure,
+        obscureText: isObscure ?? false,
         validator: validator,
       ),
     );

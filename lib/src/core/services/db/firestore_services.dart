@@ -1,4 +1,5 @@
-import 'package:chat_hive/src/core/models/chat.dart';
+import 'dart:developer';
+
 import 'package:chat_hive/src/core/models/message.dart';
 import 'package:chat_hive/src/core/models/user_model.dart';
 import 'package:chat_hive/src/core/services/db/db_services.dart';
@@ -24,6 +25,7 @@ class FirestoreServices extends DbServices {
   AsyncResult<Unit, String> deleteUser({required String uuid}) async {
     if (uuid.isNotEmpty) {
       final col = _firebaseFirestore.collection("/users");
+
       await col.doc(uuid).delete();
       return Success.unit();
     }
@@ -40,7 +42,7 @@ class FirestoreServices extends DbServices {
 
         return Success(user);
       }
-      return const Failure("Usuaio não encontrado");
+      return const Failure("Usuario não encontrado");
     }
     return const Failure("Error ao obter o usuario");
   }
@@ -60,33 +62,58 @@ class FirestoreServices extends DbServices {
 
   @override
   AsyncResult<UserModel, String> updateUser(
-      {required String uuid, required UserModel user}) async {
+      {required String uuid,
+      required String name,
+      required String lastname,
+      required String email,
+      required String password,
+      String? photoUrl}) async {
     try {
       if (uuid.isNotEmpty) {
         final doc = _firebaseFirestore.collection("/users").doc(uuid);
         final updateUser = UserModel(
-                name: user.name,
-                lastname: user.lastname,
-                email: user.email,
-                password: user.password)
+                name: name,
+                lastname: lastname,
+                email: email,
+                photoUrl: photoUrl,
+                password: password)
             .copyWith(uuid: uuid);
-        await doc.update(updateUser.toMap().cast<Object, Object>());
+        await doc.update(updateUser.toMap());
         return Success(updateUser);
       }
       return const Failure("Usuario não encontrado");
-    } catch (_) {
+    } on FirebaseException catch (e) {
+      log("${e.code} -> ${e.message}", name: "Error update user");
       return const Failure("Error ao atualizar o usuario");
     }
   }
 
   @override
-  Result<Stream<List<Message>>, String> getAllMessages(String uuidChat) {
+  Result<Stream<List<Message>>, String> getAllMessages(
+      {required String senderUuid, required String receiverUuid}) {
     try {
-      if (uuidChat.isNotEmpty) {
-        final doc = _firebaseFirestore.collection("/chats").doc(uuidChat);
+      List<String> chatUuids = [senderUuid, receiverUuid];
+      chatUuids.sort();
+      String chatUuid = chatUuids.join("-");
+      if (senderUuid.isNotEmpty && receiverUuid.isNotEmpty) {
+        final doc = _firebaseFirestore
+            .collection("/chats")
+            .doc(chatUuid)
+            .collection("messages")
+            .orderBy("timestamp", descending: false);
+
+        doc.snapshots().listen((event) {
+          final list = event.docs
+              .map(
+                (e) => Message.fromMap(e.data()),
+              )
+              .toList();
+          print(list);
+        });
         return Success(doc
             .snapshots()
-            .map((event) => Chat.fromMap(event.data() ?? {}).messages)
+            .map((event) =>
+                event.docs.map((e) => Message.fromMap(e.data())).toList())
             .distinct());
       }
       return const Failure("Error ao obter todas as messagens");
@@ -96,41 +123,27 @@ class FirestoreServices extends DbServices {
   }
 
   @override
-  AsyncResult<Chat, String> createChat(
-      {required UserModel userCurrent,
-      required UserModel userTarget,
-      String? message}) async {
+  AsyncResult<Unit, String> sendMessage(
+      {required String senderUuid,
+      required String receiverUuid,
+      required String message}) async {
     try {
-      final uuids = [userCurrent.uuid, userTarget.uuid];
-      uuids.sort();
-      final uuidChat = uuids.join("-");
-      final coll = _firebaseFirestore.collection("/chats");
-
-      final chat = Chat(
-        uuidChat: uuidChat,
-        senderUuid: userCurrent.uuid,
-        receiverUuid: userTarget.uuid,
-        messages: const [],
-      );
-
-      await coll.doc(uuidChat).set(chat.toMap());
-
-      return Success(chat);
-    } catch (_) {
-      return const Failure("Error ao criar o bate-papo");
-    }
-  }
-
-  @override
-  AsyncResult<Unit, String> sendMessage(Chat chat, String message) async {
-    try {
-      final doc = _firebaseFirestore.collection("/chats").doc(chat.uuidChat);
+      List<String> chatUuids = [senderUuid, receiverUuid];
+      chatUuids.sort();
+      String chatUuid = chatUuids.join("-");
       if (message.isNotEmpty) {
         final newUuid = uuidv6();
+        final timestamp = Timestamp.now();
         final newMessage = Message(
-            uuid: newUuid, senderUuid: chat.senderUuid, message: message);
-        chat.messages.add(newMessage);
-        await doc.set(chat.toMap());
+            uuid: newUuid,
+            senderUuid: senderUuid,
+            message: message,
+            timestamp: timestamp);
+        final coll = _firebaseFirestore
+            .collection("/chats")
+            .doc(chatUuid)
+            .collection("messages");
+        await coll.add(newMessage.toMap());
         return Success.unit();
       }
 

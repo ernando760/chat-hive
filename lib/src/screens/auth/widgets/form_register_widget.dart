@@ -1,4 +1,4 @@
-import 'package:chat_hive/src/screens/auth/widgets/form_custom_widget.dart';
+import 'package:chat_hive/src/shared/widgets/form_custom_widget.dart';
 import 'package:flutter/material.dart';
 
 class FormRegisterWidget extends FormCustomWidget {
@@ -13,21 +13,20 @@ class FormRegisterWidget extends FormCustomWidget {
   Widget build(BuildContext context) {
     return Form(
         key: formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsetsDirectional.symmetric(vertical: 10),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              ...textFormFieldCustoms,
-              const SizedBox(height: 20),
-              SizedBox(
-                child: Column(
-                  children: actions,
-                ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ...textFormFieldCustoms,
+            const SizedBox(height: 20),
+            SizedBox(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: actions,
               ),
-            ],
-          ),
+            ),
+          ],
         ));
   }
 }
