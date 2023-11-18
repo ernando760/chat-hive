@@ -1,15 +1,12 @@
-import 'dart:developer';
-import 'dart:io';
-
+import 'package:chat_hive/src/shared/controllers/avartar_user_controller.dart';
 import 'package:chat_hive/src/shared/extensions/app_theme_extensions.dart';
 import 'package:chat_hive/src/screens/auth/store/bloc/auth_bloc.dart';
 import 'package:chat_hive/src/screens/auth/validator/form_validator.dart';
 import 'package:chat_hive/src/screens/auth/widgets/form_register_widget.dart';
+import 'package:chat_hive/src/shared/widgets/avartar_user_widget.dart';
 import 'package:chat_hive/src/shared/widgets/text_form_field_custom_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -29,8 +26,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
   late final GlobalKey<FormState> _formKey;
 
-  late final ValueNotifier<String?> _photoUrl;
-
   @override
   void initState() {
     super.initState();
@@ -39,7 +34,6 @@ class _RegisterPageState extends State<RegisterPage> {
     _lastnameController = TextEditingController();
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
-    _photoUrl = ValueNotifier<String?>(null);
 
     Modular.get<AuthBloc>().stream.asBroadcastStream().listen(_listenAuthState);
   }
@@ -49,7 +43,6 @@ class _RegisterPageState extends State<RegisterPage> {
       Modular.to.pushReplacementNamed("/", arguments: state.userCurrent?.uuid);
     } else if (state is FailureAuthState) {
       final snackBar = SnackBar(content: Text(state.errorMessage!));
-      _photoUrl.value = null;
 
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
@@ -57,34 +50,19 @@ class _RegisterPageState extends State<RegisterPage> {
 
   void _signUp() async {
     if (_formKey.currentState!.validate()) {
+      final photoAvatarUser =
+          context.read<AvartarUserController>().photoFile?.path;
       Modular.get<AuthBloc>().add(SignUpEvent(
           name: _nameController.text,
           lastname: _lastnameController.text,
           email: _emailController.text,
-          photoUrl: _photoUrl.value,
+          photoUrl: photoAvatarUser,
           password: _passwordController.text));
 
       _nameController.text = "";
       _lastnameController.text = "";
       _emailController.text = "";
       _passwordController.text = "";
-      _photoUrl.value = null;
-    }
-  }
-
-  void addPhoto() async {
-    var status = await Permission.storage.request();
-    if (status.isGranted) {
-      final ImagePicker picker = ImagePicker();
-      final image = await picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        final bytes = await image.readAsBytes();
-
-        final newFile = await File.fromUri(Uri.file(image.path)).create()
-          ..writeAsBytes(bytes);
-        log(newFile.path, name: "path photo url");
-        _photoUrl.value = newFile.path;
-      }
     }
   }
 
@@ -94,7 +72,6 @@ class _RegisterPageState extends State<RegisterPage> {
     _lastnameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _photoUrl.dispose();
     super.dispose();
   }
 
@@ -114,69 +91,15 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildAvartar() {
-    double radius = 60;
-    double width = 40;
-    double height = 40;
-    return Padding(
-      padding: const EdgeInsets.only(left: 5, right: 5),
-      child: Column(
-        children: [
-          Stack(
-            children: [
-              ValueListenableBuilder<String?>(
-                  valueListenable: _photoUrl,
-                  builder: (context, photoUrl, _) {
-                    return CircleAvatar(
-                      radius: radius + 4,
-                      backgroundColor: context.backgroundColor,
-                      child: CircleAvatar(
-                        radius: radius + 2,
-                        backgroundImage: photoUrl != null
-                            ? FileImage(File(photoUrl))
-                            : const AssetImage("assets/user.png")
-                                as ImageProvider<Object>,
-                        backgroundColor: Colors.grey,
-                      ),
-                    );
-                  }),
-              Positioned(
-                  right: 0.0,
-                  bottom: 0.0,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                        color: Colors.white, shape: BoxShape.circle),
-                    child: Container(
-                      margin: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                          color: context.backgroundColor,
-                          shape: BoxShape.circle),
-                      child: IconButton(
-                          style: IconButton.styleFrom(
-                              backgroundColor: context.backgroundColor,
-                              iconSize: 20,
-                              fixedSize: Size(width, height)),
-                          splashRadius: radius - 42,
-                          onPressed: addPhoto,
-                          icon: const Icon(
-                            Icons.add,
-                            color: Colors.white,
-                          )),
-                    ),
-                  ))
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildFormRegisterWidget() {
     return SizedBox(
       child: SingleChildScrollView(
         child: Column(
           children: [
-            _buildAvartar(),
+            AvartarUserWidget(
+              onAddPressed: () =>
+                  context.read<AvartarUserController>().addPhotoAvartarUser(),
+            ),
             const SizedBox(
               height: 10,
             ),

@@ -6,7 +6,6 @@ sealed class HomeState extends Equatable {
   final UserModel? user;
 
   final List<UserModel>? users;
-
   final String? errorMessage;
 
   @override

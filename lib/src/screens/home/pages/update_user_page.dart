@@ -1,17 +1,14 @@
-import 'dart:developer';
-import 'dart:io';
-
 import 'package:chat_hive/src/core/models/user_model.dart';
-import 'package:chat_hive/src/shared/extensions/app_theme_extensions.dart';
+import 'package:chat_hive/src/shared/controllers/avartar_user_controller.dart';
 import 'package:chat_hive/src/screens/auth/store/bloc/auth_bloc.dart';
 import 'package:chat_hive/src/screens/auth/validator/form_validator.dart';
 import 'package:chat_hive/src/screens/home/store/bloc/home_bloc.dart';
 import 'package:chat_hive/src/screens/home/widgets/form_update_user_widget.dart';
+import 'package:chat_hive/src/shared/widgets/avartar_user_widget.dart';
+import 'package:chat_hive/src/shared/widgets/button_custom_widget.dart';
 import 'package:chat_hive/src/shared/widgets/text_form_field_custom_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class UpdateUserPage extends StatefulWidget {
   const UpdateUserPage({super.key, required this.user});
@@ -33,10 +30,6 @@ class _UpdateUserPageState extends State<UpdateUserPage> {
 
   late final GlobalKey<FormState> _formUpdateUserKey;
 
-  late final ValueNotifier<File?> _photoFileAvartar;
-
-  String? _photoPathAvartar;
-
   @override
   void initState() {
     super.initState();
@@ -45,7 +38,6 @@ class _UpdateUserPageState extends State<UpdateUserPage> {
     _lastnameController = TextEditingController(text: widget.user.lastname);
     _emailController = TextEditingController(text: widget.user.email);
     _passwordController = TextEditingController(text: widget.user.password);
-    _photoFileAvartar = ValueNotifier<File?>(null);
 
     Modular.get<HomeBloc>().stream.asBroadcastStream().listen(_listenHomeState);
   }
@@ -59,10 +51,8 @@ class _UpdateUserPageState extends State<UpdateUserPage> {
       _lastnameController.text = "";
       _emailController.text = "";
       _passwordController.text = "";
-      _photoFileAvartar.value = null;
     } else if (state is FailureHomeState) {
       final snackBar = SnackBar(content: Text(state.errorMessage!));
-      _photoFileAvartar.value = null;
 
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
@@ -71,33 +61,15 @@ class _UpdateUserPageState extends State<UpdateUserPage> {
   void _updateUser() async {
     if (_formUpdateUserKey.currentState!.validate()) {
       if (widget.user.uuid != null) {
+        final photoAvartarUser =
+            context.read<AvartarUserController>().photoFile?.path;
         Modular.get<HomeBloc>().add(UpdateUserEvent(
             userUuid: widget.user.uuid!,
             name: _nameController.text,
             lastname: _lastnameController.text,
             email: _emailController.text,
-            photoUrl: _photoPathAvartar,
+            photoUrl: photoAvartarUser,
             password: _passwordController.text));
-      }
-    }
-  }
-
-  void updatePhotoAvartar() async {
-    var status = await Permission.storage.request();
-    if (status.isGranted) {
-      final ImagePicker picker = ImagePicker();
-      final image = await picker.pickImage(source: ImageSource.gallery);
-
-      if (image != null) {
-        final bytes = await image.readAsBytes();
-
-        final newFile = await File.fromUri(Uri.file(image.path.trim())).create()
-          ..writeAsBytes(bytes);
-
-        _photoFileAvartar.value = newFile;
-        _photoPathAvartar = newFile.path;
-
-        log(_photoFileAvartar.value!.path, name: "path photo");
       }
     }
   }
@@ -108,7 +80,6 @@ class _UpdateUserPageState extends State<UpdateUserPage> {
     _lastnameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _photoFileAvartar.dispose();
     super.dispose();
   }
 
@@ -136,71 +107,20 @@ class _UpdateUserPageState extends State<UpdateUserPage> {
     );
   }
 
-  Widget _buildAvartar() {
-    double radius = 60;
-    double width = 40;
-    double height = 40;
-    return Padding(
-      padding: const EdgeInsets.only(left: 5, right: 5),
-      child: Column(
-        children: [
-          Stack(
-            children: [
-              ValueListenableBuilder<File?>(
-                  valueListenable: _photoFileAvartar,
-                  builder: (context, photoFile, _) {
-                    return CircleAvatar(
-                      radius: radius + 4,
-                      backgroundColor: context.backgroundColor,
-                      child: CircleAvatar(
-                        radius: radius + 2,
-                        backgroundImage: photoFile != null
-                            ? FileImage(photoFile)
-                            : widget.user.photoUrl != null
-                                ? NetworkImage(widget.user.photoUrl!)
-                                : const AssetImage("assets/user.png")
-                                    as ImageProvider<Object>,
-                        backgroundColor: Colors.grey,
-                      ),
-                    );
-                  }),
-              Positioned(
-                  right: 0.0,
-                  bottom: 0.0,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                        color: Colors.white, shape: BoxShape.circle),
-                    child: Container(
-                      margin: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                          color: context.backgroundColor,
-                          shape: BoxShape.circle),
-                      child: IconButton(
-                          style: IconButton.styleFrom(
-                              backgroundColor: context.backgroundColor,
-                              iconSize: 20,
-                              fixedSize: Size(width, height)),
-                          splashRadius: radius - 42,
-                          onPressed: updatePhotoAvartar,
-                          icon: const Icon(
-                            Icons.add,
-                            color: Colors.white,
-                          )),
-                    ),
-                  ))
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildFormRegisterWidget() {
+    final photoFile = context.read<AvartarUserController>().photoFile;
     return SizedBox(
       child: SingleChildScrollView(
         child: Column(
           children: [
-            _buildAvartar(),
+            AvartarUserWidget(
+              avartarUser:
+                  photoFile == null ? widget.user.photoUrl : photoFile.path,
+              onAddPressed: () =>
+                  context.read<AvartarUserController>().updatePhotoAvartar(),
+              onDeletePressed: () =>
+                  context.read<AvartarUserController>().removePhotoFile(),
+            ),
             const SizedBox(
               height: 10,
             ),
@@ -233,20 +153,10 @@ class _UpdateUserPageState extends State<UpdateUserPage> {
                 ),
               ],
               actions: [
-                ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: context.backgroundColor,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 15),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15))),
-                    onPressed: _updateUser,
-                    child: Text(
-                      "Atualizar",
-                      style: context.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w600),
-                    )),
-                // fontWeight: FontWeight.w600
+                ButtonCustomWidget(
+                  label: "Atualizar",
+                  onPressed: _updateUser,
+                ),
               ],
             ),
           ],

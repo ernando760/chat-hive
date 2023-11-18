@@ -2,6 +2,8 @@ import 'package:chat_hive/src/shared/extensions/app_theme_extensions.dart';
 import 'package:chat_hive/src/screens/auth/store/bloc/auth_bloc.dart';
 import 'package:chat_hive/src/screens/auth/validator/form_validator.dart';
 import 'package:chat_hive/src/screens/auth/widgets/form_login_widget.dart';
+import 'package:chat_hive/src/shared/widgets/avartar_user_widget.dart';
+import 'package:chat_hive/src/shared/widgets/button_custom_widget.dart';
 import 'package:chat_hive/src/shared/widgets/text_form_field_custom_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
@@ -59,8 +61,6 @@ class _LoginPageState extends State<LoginPage> {
     if (_formLoginKey.currentState!.validate()) {
       Modular.get<AuthBloc>().add(SignInEvent(
           email: _emailController.text, password: _passwordController.text));
-      // await Modular.get<AuthCubit>().signIn(
-      //     email: _emailController.text, password: _passwordController.text);
       _emailController.text = "";
       _passwordController.text = "";
     }
@@ -77,20 +77,11 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildFormLogin() {
-    double radius = 60;
     return SizedBox(
       child: SingleChildScrollView(
         child: Column(
           children: [
-            CircleAvatar(
-              radius: radius + 4,
-              backgroundColor: context.backgroundColor,
-              child: CircleAvatar(
-                radius: radius + 2,
-                backgroundImage: const AssetImage("assets/user.png"),
-                backgroundColor: Colors.grey,
-              ),
-            ),
+            const AvartarUserWidget(),
             const SizedBox(
               height: 10,
             ),
@@ -113,19 +104,10 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ],
               actions: [
-                ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: context.backgroundColor,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 15),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15))),
-                    onPressed: _signIn,
-                    child: Text(
-                      "Entrar",
-                      style: context.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w600),
-                    )),
+                ButtonCustomWidget(
+                  label: "Entrar",
+                  onPressed: _signIn,
+                ),
                 TextButton(
                     onPressed: () =>
                         Modular.to.pushReplacementNamed("/auth/register"),

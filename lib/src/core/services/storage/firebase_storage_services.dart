@@ -65,8 +65,8 @@ class FirebaseStorageServices extends StorageServices {
           await addPhotoAvartar(
               userUuid: userUuid, photoPathLocalAvartar: newPhotoPath)
         ]);
-        final resDeletePhotoAvartar = futures[1] as Success<Unit, StorageError>;
-        final resAddPhotoAvartar = futures[2] as Success<String, StorageError>;
+        final resDeletePhotoAvartar = futures[0] as Success<Unit, StorageError>;
+        final resAddPhotoAvartar = futures[1] as Success<String, StorageError>;
 
         final newPhoto = resAddPhotoAvartar.getOrNull();
 
